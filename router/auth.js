@@ -274,7 +274,7 @@ router.post(
       .not()
       .isEmpty()
       .withMessage("Full Name must be at least 6 chars long"),
-    check("email", "Email is required").isEmail().normalizeEmail(),
+    check("email", "Email is required").isEmail().normalizeEmail({ gmail_remove_dots: false }),
     check("password", "password is required")
       .not()
       .isEmpty()
@@ -315,7 +315,7 @@ router.post(
 router.post(
   "/store-login",
   [
-    check("email", "Email is required").isEmail().normalizeEmail(),
+    check("email", "Email is required").isEmail().normalizeEmail({ gmail_remove_dots: false }),
     check("password", "password is required")
       .not()
       .isEmpty()
@@ -370,7 +370,7 @@ router.post(
 //Forgot Password
 router.post(
   "/forgot-password",
-  [check("email", "Email is required").isEmail().normalizeEmail()],
+  [check("email", "Email is required").isEmail().normalizeEmail({ gmail_remove_dots: false })],
   async (req, res) => {
     try {
       const errors = validationResult(req);
@@ -411,7 +411,7 @@ router.post(
       });
 
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-      const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
+      const resetLink = `${frontendUrl}/admin/reset-password/${resetToken}`;
 
       try {
         await transporter.sendMail({

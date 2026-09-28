@@ -888,6 +888,21 @@ router.get("/get-post/:limit&:page",  async (req, res, next) => {
   }
 });
 
+router.get("/get-post/:limit/:page/:type", async (req, res, next) => {
+  try {
+    const limit = Math.max(parseInt(req.params.limit) || 8, 1);
+    const page = Math.max(parseInt(req.params.page) || 1, 1);
+    const filter = req.params.type === "all" ? {} : { type: req.params.type };
+    const data = await Post.find(filter)
+      .sort({ $natural: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+    return res.status(200).json(data);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/get-post/Home", async (req, res, next) => {
   try {
     const data = await Post.find().sort({ $natural: -1 }).limit(3);

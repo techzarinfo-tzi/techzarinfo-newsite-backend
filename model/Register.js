@@ -13,6 +13,12 @@ const RegisterShema=new mongoose.Schema({
     password:{
      type:String,
      unique: true,
+    },
+    resetPasswordToken:{
+     type:String,
+    },
+    resetPasswordExpires:{
+     type:Date,
     }
 });
 const Register=mongoose.model("Register",RegisterShema);

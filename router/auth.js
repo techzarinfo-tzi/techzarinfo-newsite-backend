@@ -11,7 +11,8 @@ const upload = multer({ dest: "./public/uploads/" });
 const bcrypt = require("bcrypt");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
-const { verify } = require("crypto");
+const crypto = require("crypto");
+const { verify } = crypto;
 const cookieParser = require("cookie-parser");
 
 // verify
@@ -70,7 +71,7 @@ router.post(
         service: "gmail",
         auth: {
           user: "sales@techzarinfo.com",
-          pass: "yirdglarnqbpvscf",
+          pass: "qjmogduymchvbhrt",
         },
       });
 
@@ -166,7 +167,7 @@ router.post(
         service: "gmail",
         auth: {
           user: "sales@techzarinfo.com",
-          pass: "yirdglarnqbpvscf",
+          pass: "qjmogduymchvbhrt",
         },
       });
 
@@ -366,6 +367,135 @@ router.post(
   }
 );
 
+//Forgot Password
+router.post(
+  "/forgot-password",
+  [check("email", "Email is required").isEmail().normalizeEmail()],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(200).json({
+          status: 0,
+          errors: errors.array(),
+        });
+      }
+
+      // Same response whether or not the email exists, so accounts can't be enumerated
+      const genericResponse = {
+        message: "If that email is registered, a reset link has been sent",
+        status: 1,
+      };
+
+      const user = await Register.findOne({ email: req.body.email });
+      if (!user) {
+        return res.status(200).json(genericResponse);
+      }
+
+      // Send the raw token by email, store only its hash
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      user.resetPasswordToken = crypto
+        .createHash("sha256")
+        .update(resetToken)
+        .digest("hex");
+      user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+      await user.save();
+
+      const nodemailer = require("nodemailer");
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "sales@techzarinfo.com",
+          pass: "qjmogduymchvbhrt",
+        },
+      });
+
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
+
+      try {
+        await transporter.sendMail({
+          from: "sales@techzarinfo.com",
+          to: user.email,
+          subject: "Password Reset Request",
+          html: `<p>Hi ${user.name},</p>
+            <p>We received a request to reset your password. Click the link below to set a new one:</p>
+            <p><a href="${resetLink}">${resetLink}</a></p>
+            <p>This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>`,
+        });
+      } catch (mailError) {
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+        return res.status(500).json({
+          message: "Could not send reset email, please try again later",
+          status: 0,
+        });
+      }
+
+      return res.status(200).json(genericResponse);
+    } catch (error) {
+      return res.status(500).json({
+        message: error.message,
+        status: 0,
+      });
+    }
+  }
+);
+
+//Reset Password
+router.post(
+  "/reset-password/:token",
+  [
+    check("password", "password is required")
+      .isLength({ min: 6 })
+      .withMessage("Password must be at least 6 chars long"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(200).json({
+          status: 0,
+          errors: errors.array(),
+        });
+      }
+
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(req.params.token)
+        .digest("hex");
+
+      const user = await Register.findOne({
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: { $gt: Date.now() },
+      });
+      if (!user) {
+        return res.status(200).json({
+          message: "Reset link is invalid or has expired",
+          status: 0,
+        });
+      }
+
+      const saltRounds = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(req.body.password, saltRounds);
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+
+      return res.status(200).json({
+        message: "Your password has been reset successfully",
+        status: 1,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error.message,
+        status: 0,
+      });
+    }
+  }
+);
+
 //Hire A Developer
 router.post(
   "/store-hire-a-developer",
@@ -404,7 +534,7 @@ router.post(
         service: "gmail",
         auth: {
           user: "sales@techzarinfo.com",
-          pass: "yirdglarnqbpvscf",
+          pass: "qjmogduymchvbhrt",
         },
       });
 

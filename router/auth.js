@@ -410,7 +410,17 @@ router.post(
         },
       });
 
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      // Link back to the site the request came from, but only for known
+      // domains so a forged Origin header can't redirect the reset link
+      const allowedFrontends = [
+        "https://www.techzarinfo.com",
+        "https://www.techzarinfo.in",
+        "http://localhost:3000",
+      ];
+      const origin = req.headers.origin;
+      const frontendUrl = allowedFrontends.includes(origin)
+        ? origin
+        : process.env.FRONTEND_URL || "https://www.techzarinfo.com";
       const resetLink = `${frontendUrl}/admin/reset-password/${resetToken}`;
 
       try {

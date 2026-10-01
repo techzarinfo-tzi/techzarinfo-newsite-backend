@@ -8,7 +8,7 @@ package-lock.json
 # environment / secrets
 .env
 .env.*
-!.env.example
+.env.example*
 
 # misc
 .DS_Store

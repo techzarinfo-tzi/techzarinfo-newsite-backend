@@ -1,4 +1,24 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
+
+export const POST_TYPES = [
+  "Mobile app",
+  "Web app",
+  "Sass product",
+  "E-commerce",
+  "Digital marketing",
+  "Robotics process",
+  "Artificial intelligence",
+  "Internet of things",
+  "Machine learning",
+  "Enterprises software solutions",
+  "Business automation",
+  "ERP",
+  "CRM",
+  "LMS",
+  "SMS",
+  "ZAAR",
+  "CMMS",
+];
 
 const postSchema = new mongoose.Schema(
   {
@@ -39,25 +59,7 @@ const postSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: [
-        "Mobile app",
-        "Web app",
-        "Sass product",
-        "E-commerce",
-        "Digital marketing",
-        "Robotics process",
-        "Artificial intelligence",
-        "Internet of things",
-        "Machine learning",
-        "Enterprises software solutions",
-        "Business automation",
-        "ERP",
-        "CRM",
-        "LMS",
-        "SMS",
-        "ZAAR",
-        "CMMS"
-      ],
+      enum: POST_TYPES,
     },
   },
   {
@@ -67,4 +69,4 @@ const postSchema = new mongoose.Schema(
 
 const Post = mongoose.model("Post", postSchema);
 
-module.exports = Post;
+export default Post;

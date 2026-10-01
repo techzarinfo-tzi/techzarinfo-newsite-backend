@@ -1,35 +1,15 @@
-const http = require("http");
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const auth = require("./router/auth");
-const mongoose = require("mongoose");
-const cookieParser = require("cookie-parser");
+import config from "./src/config/index.js";
+import connectDB from "./src/config/db.js";
+import app from "./src/app.js";
 
-const app = express();
-mongoose.connect(
-  "mongodb://0.0.0.0:27017/techzar",
-  {
-    useUnifiedTopology: true,
-    useNewUrlParser: true,
-  },
-  (err) => {
-    if (err) throw err;
-    console.log("connected to db success");
-  }
-);
-// const corsOptions ={
-//   origin:'*',
-//   credentials:true, //access-control-allow-credentials:true
-//    optionSuccessStatus:200,
-// }
-app.set("trust proxy", 1);
-app.use(cookieParser());
-app.use(cors({ origin: ["https://www.techzarinfo.com","https://www.techzarinfo.in"] }));
-const path = require("path");
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use("/", auth);
-app.use(express.static("public"));
-app.use("/uploads", express.static("uploads"));
-app.listen(4000, () => console.log("bas"));
+const start = async () => {
+  await connectDB();
+  app.listen(config.port, () => {
+    console.log(`Server listening on port ${config.port} (${config.env})`);
+  });
+};
+
+start().catch((err) => {
+  console.error("Failed to start server:", err);
+  process.exit(1);
+});
